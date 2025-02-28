@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
-const eventHandler = require('./src/eventHandler'); // Import du gestionnaire d'événements
+const fs = require('fs');
 
 // Créer une instance du client Discord
 const client = new Client({
@@ -12,13 +12,20 @@ const client = new Client({
   ],
 });
 
-// Charger les événements
-eventHandler(client);
+// Charger les commandes
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
+commandFiles.forEach(file => {
+  const command = require(`./commands/${file}`);
+  client.on('messageCreate', (message) => {
+    if (message.content.toLowerCase() === `!${command.name}`) {
+      command.execute(message);
+    }
+  });
+});
 
 // Connexion au bot avec le token
-client.login(process.env.DISCORD_TOKEN)
-  .then(() => console.log("Bot connecté avec succès"))
-  .catch((err) => console.error("Erreur de connexion avec le bot: ", err));
+client.login(process.env.DISCORD_TOKEN);
 
 // Connexion à MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
