@@ -1,6 +1,8 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 
 // Créer une instance du client Discord
 const client = new Client({
@@ -11,9 +13,17 @@ const client = new Client({
   ],
 });
 
-// Importer et utiliser le gestionnaire d'événements
-const eventHandler = require('./src/eventHandler');
-eventHandler(client);
+// Charger les commandes
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
+commandFiles.forEach(file => {
+  const command = require(`./commands/${file}`);
+  client.on('messageCreate', (message) => {
+    if (message.content.toLowerCase() === `!${command.name}`) {
+      command.execute(message);
+    }
+  });
+});
 
 // Connexion au bot avec le token
 client.login(process.env.DISCORD_TOKEN);
