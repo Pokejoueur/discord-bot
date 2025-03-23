@@ -1,5 +1,3 @@
-const { GatewayIntentBits } = require('discord.js');
-
 function setupAuditLogger(client, logChannelId) {
   client.on('guildAuditLogEntryCreate', async (entry, guild) => {
     const logChannel = guild.channels.cache.get(logChannelId);
