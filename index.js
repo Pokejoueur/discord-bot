@@ -26,7 +26,7 @@ commandFiles.forEach(file => {
   });
 });
 
-const LOG_CHANNEL_ID = 'YOUR_CHANNEL_ID'; // Replace with your log channel ID
+const LOG_CHANNEL_ID = '1353468463720562718'; // Replace with your log channel ID
 
 // When bot is ready, initialize audit log monitoring
 client.once('ready', () => {
