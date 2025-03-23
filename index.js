@@ -2,6 +2,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
 const fs = require('fs');
+const { setupAuditLogger } = require('./auditLogger'); // Import audit logger
 
 // Créer une instance du client Discord
 const client = new Client({
@@ -9,6 +10,7 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildModeration, // Required for audit logs
   ],
 });
 
@@ -22,6 +24,14 @@ commandFiles.forEach(file => {
       command.execute(message);
     }
   });
+});
+
+const LOG_CHANNEL_ID = 'YOUR_CHANNEL_ID'; // Replace with your log channel ID
+
+// When bot is ready, initialize audit log monitoring
+client.once('ready', () => {
+  console.log(`Logged in as ${client.user.tag}!`);
+  setupAuditLogger(client, LOG_CHANNEL_ID);
 });
 
 // Connexion au bot avec le token
