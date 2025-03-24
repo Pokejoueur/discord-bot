@@ -1,22 +1,26 @@
-const XP = require('../models/xp');
+const { Events } = require("discord.js");
 
 module.exports = {
-    name: 'messageCreate',
+    name: Events.MessageCreate,
     async execute(message) {
+        // Ignore bot messages
         if (message.author.bot) return;
 
-        const user = await XP.findOne({ userId: message.author.id }) || new XP({ userId: message.author.id });
-
-        const xpGain = Math.floor(Math.random() * 10) + 5;
-        user.xp += xpGain;
-
-        const nextLevelXP = user.level * 100;
-        if (user.xp >= nextLevelXP) {
-            user.xp = 0;
-            user.level += 1;
-            message.channel.send(`🎉 **${message.author.username}** leveled up to **Level ${user.level}**!`);
+        // Example 1: Auto-reply to "hello"
+        if (message.content.toLowerCase() === "hello") {
+            message.reply("👋 Hi there!");
         }
 
-        await user.save();
+        // Example 2: Simple moderation (delete bad words)
+        const bannedWords = ["badword1", "badword2"];
+        if (bannedWords.some(word => message.content.toLowerCase().includes(word))) {
+            await message.delete();
+            message.channel.send(`${message.author}, please avoid using inappropriate language.`);
+        }
+
+        // Example 3: Economy & Level System (Placeholder for future expansion)
+        // Here, you would increase user XP or manage currency.
+
+        console.log(`[${message.guild.name}] #${message.channel.name} | ${message.author.tag}: ${message.content}`);
     }
 };
