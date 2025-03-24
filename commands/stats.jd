@@ -1,0 +1,27 @@
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const Stat = require('../models/stats');
+
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('stats')
+        .setDescription('Get server statistics'),
+
+    async execute(interaction) {
+        const stat = await Stat.findOne({ guildId: interaction.guild.id });
+
+        if (!stat) {
+            return interaction.reply({ content: "No stats found for this server!", ephemeral: true });
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle("📊 Server Statistics")
+            .setColor("#3498db")
+            .addFields(
+                { name: "📝 Messages Sent", value: stat.messagesSent.toString(), inline: true },
+                { name: "🎙 Voice Time", value: `${(stat.voiceTime / 60).toFixed(2)} mins`, inline: true },
+                { name: "👥 Total Members", value: interaction.guild.memberCount.toString(), inline: true }
+            );
+
+        await interaction.reply({ embeds: [embed] });
+    }
+};
