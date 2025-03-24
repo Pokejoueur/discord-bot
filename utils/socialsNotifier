@@ -1,0 +1,66 @@
+const { Client, EmbedBuilder } = require('discord.js');
+const axios = require('axios');
+require('dotenv').config();
+
+const NOTIFY_CHANNEL_ID = process.env.NOTIFY_CHANNEL_ID;
+
+async function checkYouTube(channel, discordClient) {
+    try {
+        const response = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
+            params: {
+                part: 'snippet',
+                channelId: channel,
+                order: 'date',
+                type: 'video',
+                key: process.env.YOUTUBE_API_KEY,
+            }
+        });
+
+        const video = response.data.items[0];
+        const videoUrl = `https://www.youtube.com/watch?v=${video.id.videoId}`;
+
+        const embed = new EmbedBuilder()
+            .setTitle("🎥 New YouTube Video!")
+            .setURL(videoUrl)
+            .setDescription(`**${video.snippet.title}**\n${videoUrl}`)
+            .setImage(video.snippet.thumbnails.high.url)
+            .setColor('#FF0000');
+
+        const notifyChannel = discordClient.channels.cache.get(NOTIFY_CHANNEL_ID);
+        if (notifyChannel) notifyChannel.send({ embeds: [embed] });
+
+    } catch (error) {
+        console.error("Error fetching YouTube:", error);
+    }
+}
+
+async function checkTwitch(username, discordClient) {
+    try {
+        const response = await axios.get(`https://api.twitch.tv/helix/streams`, {
+            headers: {
+                'Client-ID': process.env.TWITCH_CLIENT_ID,
+                'Authorization': `Bearer ${process.env.TWITCH_ACCESS_TOKEN}`
+            },
+            params: { user_login: username }
+        });
+
+        if (response.data.data.length > 0) {
+            const stream = response.data.data[0];
+
+            const embed = new EmbedBuilder()
+                .setTitle("🟣 Live on Twitch!")
+                .setURL(`https://twitch.tv/${username}`)
+                .setDescription(`**${stream.user_name} is now live!**\n\n${stream.title}`)
+                .setImage(stream.thumbnail_url.replace("{width}", "1280").replace("{height}", "720"))
+                .setColor('#9146FF');
+
+            const notifyChannel = discordClient.channels.cache.get(NOTIFY_CHANNEL_ID);
+            if (notifyChannel) notifyChannel.send({ embeds: [embed] });
+        }
+
+    } catch (error) {
+        console.error("Error fetching Twitch:", error);
+    }
+}
+
+module.exports = { checkYouTube, checkTwitch };
