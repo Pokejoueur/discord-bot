@@ -1,0 +1,29 @@
+const { SlashCommandBuilder } = require('discord.js');
+const Giveaway = require('../../models/giveaway');
+
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('giveaway-end')
+        .setDescription('End a giveaway')
+        .addStringOption(option => option.setName('messageid').setDescription('Message ID of the giveaway').setRequired(true)),
+    async execute(interaction) {
+        const messageId = interaction.options.getString('messageid');
+        const giveaway = await Giveaway.findOne({ messageId });
+
+        if (!giveaway) return interaction.reply('❌ Giveaway not found.');
+
+        if (giveaway.participants.length < giveaway.winners) {
+            return interaction.reply('❌ Not enough participants.');
+        }
+
+        const winners = [];
+        for (let i = 0; i < giveaway.winners; i++) {
+            const winner = giveaway.participants[Math.floor(Math.random() * giveaway.participants.length)];
+            if (!winners.includes(winner)) winners.push(winner);
+        }
+
+        await interaction.channel.send(`🎉 Congratulations! The winners of **${giveaway.prize}** are: ${winners.map(w => `<@${w}>`).join(', ')}`);
+
+        await Giveaway.deleteOne({ messageId });
+    }
+};
